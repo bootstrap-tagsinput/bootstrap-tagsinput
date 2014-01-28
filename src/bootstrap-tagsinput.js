@@ -33,9 +33,11 @@
     this.objectItems = options && options.itemValue;
     this.placeholderText = element.hasAttribute('placeholder') ? this.$element.attr('placeholder') : '';
     this.inputSize = Math.max(1, this.placeholderText.length);
+    this.id = element.hasAttribute('id') ? 'bs-ti-' + this.$element.attr('id') : '';
+    this.container_id = element.hasAttribute('id') ? 'bs-ti-container-' + this.$element.attr('id') : '';
 
-    this.$container = $('<div class="bootstrap-tagsinput"></div>');
-    this.$input = $('<input size="' + this.inputSize + '" type="text" placeholder="' + this.placeholderText + '"/>').appendTo(this.$container);
+    this.$container = $('<div class="bootstrap-tagsinput" id="' + this.container_id + '"></div>');
+    this.$input = $('<input size="' + this.inputSize + '" type="text" placeholder="' + this.placeholderText + '" id="' + this.id + '" />').appendTo(this.$container);
 
     this.$element.after(this.$container);
 
