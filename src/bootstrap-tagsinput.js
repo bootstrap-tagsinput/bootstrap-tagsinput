@@ -30,12 +30,15 @@
 
     this.isSelect = (element.tagName === 'SELECT');
     this.multiple = (this.isSelect && element.hasAttribute('multiple'));
+    this.objectOptions = options;
     this.objectItems = options && options.itemValue;
     this.placeholderText = element.hasAttribute('placeholder') ? this.$element.attr('placeholder') : '';
     this.inputSize = Math.max(1, this.placeholderText.length);
 
     this.$container = $('<div class="bootstrap-tagsinput"></div>');
+    this.$removeAll = $('<a class="remove-all"><i class="icon-remove"></a>').appendTo(this.$container);
     this.$input = $('<input size="' + this.inputSize + '" type="text" placeholder="' + this.placeholderText + '"/>').appendTo(this.$container);
+    this.$sourceTags = $('<div id="source-tags" class="hidden"></div>').appendTo(this.$container);
 
     this.$element.after(this.$container);
 
@@ -169,9 +172,41 @@
         self.itemsArray.pop();
 
       self.pushVal();
+    },
 
-      if (self.options.maxTags && !this.isEnabled())
-        this.enable();
+    /**
+     * Shows/hides the source tags.
+     */
+    toggleSourceTags: function(action) {
+      var self = this;
+
+      if ($.trim(self.$sourceTags.html()).length ) {
+        if (action == 'hide') {
+            self.$sourceTags.hide();
+            return;
+        } else if (action == 'show') {
+            self.$sourceTags.show();
+            return;
+        }
+      }
+
+      var typeahead = self.options.typeahead || {sourceTags: false};
+
+      if (typeahead.source && typeahead.sourceTags && $.fn.typeahead) {
+        $.each(typeahead.source(), function(i, item) {
+          if (typeof item === 'object') {
+            var text  = self.options.itemText(item);
+            var value = self.options.itemValue(item);
+
+            var $tag = $('<span class="source-tag label" data-role="add" data-text="' + text + '" data-value="' + value + '">' + text + '</span>').appendTo(self.$sourceTags);
+
+          } else {
+            $('<span class="source-tag label" data-role="add">' + self.options.itemText(item) + '</span>').appendTo(self.$sourceTags);
+          }
+        });
+
+        self.$sourceTags.show();
+      }
     },
 
     /**
@@ -228,7 +263,7 @@
       var self = this;
 
       self.options = $.extend({}, defaultOptions, options);
-      var typeahead = self.options.typeahead || {};
+      var typeahead = self.options.typeahead || {sourceTags: false};
 
       // When itemValue is set, freeInput should always be false
       if (self.objectItems)
@@ -289,6 +324,16 @@
 
       self.$container.on('click', $.proxy(function(event) {
         self.$input.focus();
+        if (self.options.typeahead.sourceTags) {
+          self.toggleSourceTags('show');
+        }
+      }, self));
+
+      $('body').on('click', $.proxy(function(event) {
+        var element = $(event.target);
+        if (!element.hasClass('bootstrap-tagsinput') && element.parents('.bootstrap-tagsinput').length == 0) {
+          self.toggleSourceTags('hide');
+        }
       }, self));
 
       self.$container.on('keydown', 'input', $.proxy(function(event) {
@@ -345,12 +390,31 @@
         }
 
         // Reset internal input's size
-        $input.attr('size', Math.max(this.inputSize, $input.val().length));
+        this.placeholderText = this.$element.attr('placeholder') ? this.$element.attr('placeholder') : '';
+        $input.attr('size', Math.max(this.inputSize, this.placeholderText.length));
       }, self));
 
       // Remove icon clicked
       self.$container.on('click', '[data-role=remove]', $.proxy(function(event) {
         self.remove($(event.target).closest('.tag').data('item'));
+      }, self));
+
+      self.$removeAll.on('click', $.proxy(function(event) {
+        self.removeAll();
+      }, self));
+
+      // Source tag clicked
+      self.$container.on('click', '[data-role=add]', $.proxy(function(event) {
+        var element = $(event.target);
+        if (!element.data('text')) {
+          self.add(element.html());
+        } else {
+          var item = {};
+          item[this.objectOptions.itemText]  = element.data('text');
+          item[this.objectOptions.itemValue] = element.data('value');
+
+          self.add(item);
+        }
       }, self));
 
       // Only add existing value as tags when using strings as tags
