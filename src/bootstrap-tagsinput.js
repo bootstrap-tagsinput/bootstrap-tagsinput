@@ -125,6 +125,12 @@
       // register item in internal array and map
       self.itemsArray.push(item);
 
+      //remove placeholder if there is an item, restore if no item(s)
+      if (self.itemsArray.length)
+        self.$input.attr('placeholder', '');
+      else
+        self.$input.attr('placeholder', self.placeholderText);
+
       // add a tag element
 
       var $tag = $('<span class="tag ' + htmlEncode(tagClass) + (itemTitle !== null ? ('" title="' + itemTitle) : '') + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>');
@@ -139,6 +145,12 @@
         $option.attr('value', itemValue);
         self.$element.append($option);
       }
+
+      //remove placeholder if there is an item, restore if no item(s)
+      if (self.itemsArray.length)
+        self.$input.attr('placeholder', '');
+      else
+        self.$input.attr('placeholder', self.placeholderText);
 
       if (!dontPushVal)
         self.pushVal();
@@ -178,6 +190,12 @@
           self.itemsArray.splice($.inArray(item, self.itemsArray), 1);
       }
 
+      //remove placeholder if there is an item, restore if no item(s)
+      if (self.itemsArray.length)
+        self.$input.attr('placeholder', '');
+      else
+        self.$input.attr('placeholder', self.placeholderText);
+
       if (!dontPushVal)
         self.pushVal();
 
@@ -199,6 +217,12 @@
 
       while(self.itemsArray.length > 0)
         self.itemsArray.pop();
+
+      //remove placeholder if there is an item, restore if no item(s)
+      if (self.itemsArray.length)
+        self.$input.attr('placeholder', '');
+      else
+        self.$input.attr('placeholder', self.placeholderText);
 
       self.pushVal();
     },
