@@ -33,6 +33,7 @@
    * Constructor function
    */
   function TagsInput(element, options) {
+    var tagClass;
     this.itemsArray = [];
 
     this.$element = $(element);
@@ -49,6 +50,13 @@
 
     this.$element.before(this.$container);
 
+    options = options || {};   
+    if(options.tagClass == undefined){
+      tagClass = this.$element.data('tag-class');
+      if(tagClass)
+        options.tagClass = function(){ return tagClass;};
+    }
+    
     this.build(options);
   }
 
