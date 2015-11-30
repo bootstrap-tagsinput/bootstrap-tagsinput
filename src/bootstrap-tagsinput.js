@@ -27,7 +27,8 @@
       $tag.hide().fadeIn();
     },
     trimValue: false,
-    allowDuplicates: false
+    allowDuplicates: false,
+    caseSensitive: true
   };
 
   /**
@@ -108,8 +109,8 @@
           tagClass = self.options.tagClass(item),
           itemTitle = self.options.itemTitle(item);
 
-      // Ignore items allready added
-      var existing = $.grep(self.itemsArray, function(item) { return self.options.itemValue(item) === itemValue; } )[0];
+      // Ignore items already added
+      var existing = $.grep(self.itemsArray, function(item) { return self.options.caseSensitive?self.options.itemValue(item) === itemValue:self.options.itemValue(item).toLowerCase() === itemValue.toLowerCase(); } )[0];
       if (existing && !self.options.allowDuplicates) {
         // Invoke onTagExists
         if (self.options.onTagExists) {
