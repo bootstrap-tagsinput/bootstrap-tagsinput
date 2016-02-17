@@ -353,15 +353,19 @@
           if ($.isArray(typeaheadjs)) {
             typeaheadConfig = typeaheadjs[0];
             typeaheadDatasets = typeaheadjs[1];
+          } else if (typeaheadjs.options && typeaheadjs.datasets) {
+            typeaheadConfig = typeaheadjs.options;
+            typeaheadDatasets = typeaheadjs.datasets;
           } else {
             typeaheadDatasets = typeaheadjs;
           }
 
           self.$input.typeahead(typeaheadConfig, typeaheadDatasets).on('typeahead:selected', $.proxy(function (obj, datum) {
-            if (typeaheadDatasets.valueKey)
-              self.add(datum[typeaheadDatasets.valueKey]);
-            else
-              self.add(datum);
+            if (typeaheadDatasets.valueKey) {
+                self.add(datum[typeaheadDatasets.valueKey]);
+            } else {
+                self.add(datum);
+            }
             self.$input.typeahead('val', '');
           }, self));
       }
