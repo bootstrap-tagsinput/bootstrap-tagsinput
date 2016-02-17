@@ -36,6 +36,8 @@
    */
   function TagsInput(element, options) {
     this.isInit = true;
+    options = $.extend({}, defaultOptions, options);
+
     this.itemsArray = [];
 
     this.$element = $(element);
@@ -48,9 +50,12 @@
     this.inputSize = Math.max(1, this.placeholderText.length);
 
     this.$container = $('<div class="bootstrap-tagsinput"></div>');
+    this.$container.css('width', this.$element.outerWidth());   // Inherit the width of the input being replaced.
     this.$input = $('<input type="text" placeholder="' + this.placeholderText + '"/>').appendTo(this.$container);
 
     this.$element.before(this.$container);
+
+    this.inputStartWidth = this.$input.outerWidth()
 
     this.build(options);
     this.isInit = false;
@@ -281,8 +286,8 @@
      */
     build: function(options) {
       var self = this;
+      self.options = options;
 
-      self.options = $.extend({}, defaultOptions, options);
       // When itemValue is set, freeInput should always be false
       if (self.objectItems)
         self.options.freeInput = false;
@@ -393,6 +398,32 @@
           self.$container.removeClass(self.options.focusClass);
         },
       });
+
+      self.$container.on('keyup', 'input', $.proxy(function(event) {
+        var oneLetterWidth = 10;    // Assume one letter takes up 10 pixels
+        var minCharacters = 5;      // Assume the field will not expand until the 6th letter
+        var len = $(this).val().length;
+        var calculatedWidth = len * oneLetterWidth;
+
+        // Make sure that we do not go over the width of the container
+        if ((calculatedWidth + oneLetterWidth) >= self.$container.width()) {
+            return;
+        }
+
+        // If the new width is greated than the current width, let's grow the input
+        if (calculatedWidth > self.inputStartWidth) {
+            if (len > minCharacters) {
+                // increase width
+                $(this).width(calculatedWidth);
+            } else {
+                // restore minimal width;
+                $(this).css('width', self.inputStartWidth);
+            }
+        } else {
+            // Make sure the input does not shrink as its width is set to "auto"
+            $(this).css('width', self.inputStartWidth);
+        }
+      }));
 
       self.$container.on('keydown', 'input', $.proxy(function(event) {
         var $input = $(event.target),
