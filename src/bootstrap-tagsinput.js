@@ -17,6 +17,7 @@
     },
     freeInput: true,
     addOnBlur: true,
+    autoResize: true,
     maxTags: undefined,
     maxChars: undefined,
     confirmKeys: [13, 44],
@@ -453,10 +454,12 @@
          }
 
         // Reset internal input's size
-        var textLength = $input.val().length,
-            wordSpace = Math.ceil(textLength / 5),
-            size = textLength + wordSpace + 1;
-        $input.attr('size', Math.max(this.inputSize, $input.val().length));
+        if (self.options.autoResize) {
+          var textLength = $input.val().length,
+              wordSpace = Math.ceil(textLength / 5),
+              size = textLength + wordSpace + 1;
+          $input.attr('size', Math.max(this.inputSize, $input.val().length));
+        }
       }, self));
 
       self.$container.on('keypress', 'input', $.proxy(function(event) {
@@ -483,10 +486,12 @@
          }
 
          // Reset internal input's size
-         var textLength = $input.val().length,
-            wordSpace = Math.ceil(textLength / 5),
-            size = textLength + wordSpace + 1;
-         $input.attr('size', Math.max(this.inputSize, $input.val().length));
+         if (self.options.autoResize) {
+           var textLength = $input.val().length,
+              wordSpace = Math.ceil(textLength / 5),
+              size = textLength + wordSpace + 1;
+           $input.attr('size', Math.max(this.inputSize, $input.val().length));
+         }
       }, self));
 
       // Remove icon clicked
