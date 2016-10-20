@@ -297,7 +297,7 @@
 
         makeOptionFunction(typeahead, 'source');
 
-        self.$input.typeahead($.extend({}, typeahead, {
+        self.$input.typeahead($.extend({
           source: function (query, process) {
             function processItems(items) {
               var texts = [];
@@ -340,7 +340,7 @@
             var regex = new RegExp( '(' + this.query + ')', 'gi' );
             return text.replace( regex, "<strong>$1</strong>" );
           }
-        }));
+        },typeahead));
       }
 
       // typeahead.js
