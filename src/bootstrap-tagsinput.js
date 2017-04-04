@@ -291,7 +291,7 @@
       makeOptionItemFunction(self.options, 'itemText');
       makeOptionFunction(self.options, 'tagClass');
 
-      // Typeahead Bootstrap version 2.3.2
+      // Bootstrap-3-Typeahead (https://github.com/bassjobsen/Bootstrap-3-Typeahead)
       if (self.options.typeahead) {
         var typeahead = self.options.typeahead || {};
 
@@ -299,46 +299,39 @@
 
         self.$input.typeahead($.extend({}, typeahead, {
           source: function (query, process) {
-            function processItems(items) {
-              var texts = [];
+            function processData(data) {
+              if (!data)
+                return;
 
-              for (var i = 0; i < items.length; i++) {
-                var text = self.options.itemText(items[i]);
-                map[text] = items[i];
-                texts.push(text);
+              if ($.isFunction(data.success)) {
+                // support for Angular callbacks
+                data.success(process);
+              } else if ($.isFunction(data.then)) {
+                // support for Angular promises
+                data.then(process);
+              } else {
+                // support for functions and jquery promises
+                $.when(data).then(process);
               }
-              process(texts);
             }
 
-            this.map = {};
-            var map = this.map,
-                data = typeahead.source(query);
-
-            if ($.isFunction(data.success)) {
-              // support for Angular callbacks
-              data.success(processItems);
-            } else if ($.isFunction(data.then)) {
-              // support for Angular promises
-              data.then(processItems);
-            } else {
-              // support for functions and jquery promises
-              $.when(data)
-               .then(processItems);
+            // Bloodhound (since 0.11) needs three arguments. 
+            // Two of them are callback functions (sync and async) for local and remote data processing
+            // see https://github.com/twitter/typeahead.js/blob/master/src/bloodhound/bloodhound.js#L132
+            if ($.isFunction(typeahead.source) && typeahead.source.length === 3) {
+              typeahead.source(query, processData, processData);
+            }
+            else {
+              // data is directly returned by source function
+              processData(typeahead.source(query));
             }
           },
-          updater: function (text) {
-            self.add(this.map[text]);
-            return this.map[text];
-          },
-          matcher: function (text) {
-            return (text.toLowerCase().indexOf(this.query.trim().toLowerCase()) !== -1);
-          },
-          sorter: function (texts) {
-            return texts.sort();
-          },
-          highlighter: function (text) {
-            var regex = new RegExp( '(' + this.query + ')', 'gi' );
-            return text.replace( regex, "<strong>$1</strong>" );
+          updater: function (item) {
+            if (self.objectItems)
+              self.add(self.options.itemValue(item));
+            else
+              self.add(self.options.itemText(item));
+            return '';
           }
         }));
       }
