@@ -25,6 +25,7 @@
     maxTags: undefined,
     maxChars: undefined,
     confirmKeys: [13, 44],
+    deleteKeys: [8, 46],
     delimiter: ',',
     delimiterRegex: null,
     cancelConfirmKeysOnEmpty: false,
@@ -33,7 +34,8 @@
     },
     trimValue: false,
     allowDuplicates: false,
-    triggerChange: true
+    triggerChange: true,
+    caseSensitive: true
   };
 
   /**
@@ -114,8 +116,8 @@
           tagClass = self.options.tagClass(item),
           itemTitle = self.options.itemTitle(item);
 
-      // Ignore items allready added
-      var existing = $.grep(self.itemsArray, function(item) { return self.options.itemValue(item) === itemValue; } )[0];
+      // Ignore items already added
+      var existing = $.grep(self.itemsArray, function(item) { return self.options.caseSensitive ?  self.options.itemValue(item) === itemValue : self.options.itemValue(item).toLowerCase() === itemValue.toLowerCase();} )[0];
       if (existing && !self.options.allowDuplicates) {
         // Invoke onTagExists
         if (self.options.onTagExists) {
@@ -406,20 +408,24 @@
         switch (event.which) {
           // BACKSPACE
           case 8:
-            if (doGetCaretPosition($input[0]) === 0) {
-              var prev = $inputWrapper.prev();
-              if (prev.length) {
-                self.remove(prev.data('item'));
+            if(self.options.deleteKeys && jQuery.inArray(event.which, self.options.deleteKeys) > -1){
+              if (doGetCaretPosition($input[0]) === 0) {
+                var prev = $inputWrapper.prev();
+                if (prev.length) {
+                  self.remove(prev.data('item'));
+                }
               }
             }
             break;
 
           // DELETE
           case 46:
-            if (doGetCaretPosition($input[0]) === 0) {
-              var next = $inputWrapper.next();
-              if (next.length) {
-                self.remove(next.data('item'));
+            if(self.options.deleteKeys && jQuery.inArray(event.which, self.options.deleteKeys) > -1) {
+              if (doGetCaretPosition($input[0]) === 0) {
+                var next = $inputWrapper.next();
+                if (next.length) {
+                  self.remove(next.data('item'));
+                }
               }
             }
             break;
