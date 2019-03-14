@@ -131,20 +131,28 @@
         return;
 
       // register item in internal array and map
-      self.itemsArray.push(item);
+      self.itemsArray.splice(self.findInputWrapper().index(), 0, item);
 
       // add a tag element
 
-      var $tag = $('<span class="tag ' + htmlEncode(tagClass) + (itemTitle !== null ? ('" title="' + itemTitle) : '') + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>');
+      var $tag = $('<span class="tag ' + htmlEncode(tagClass) + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>');
       $tag.data('item', item);
       self.findInputWrapper().before($tag);
       $tag.after(' ');
-
-      // Check to see if the tag exists in its raw or uri-encoded form
-      var optionExists = (
-        $('option[value="' + encodeURIComponent(itemValue) + '"]', self.$element).length ||
-        $('option[value="' + htmlEncode(itemValue) + '"]', self.$element).length
-      );
+      
+      //additional events
+      var span = $tag[0];
+      span.onclick = function(){
+        self.$element.trigger($.Event('tagClicked', { item: item, span: span }));
+      };
+      
+      span.onmouseover = function(){
+        self.$element.trigger($.Event('tagMouseOver', { item: item, span: span }));
+      };
+      
+      span.onmouseout = function(){
+        self.$element.trigger($.Event('tagMouseOut', { item: item, span: span }));
+      };
 
       // add <option /> if item represents a value not present in one of the <select />'s options
       if (self.isSelect && !optionExists) {
@@ -283,9 +291,6 @@
       var self = this;
 
       self.options = $.extend({}, defaultOptions, options);
-      // When itemValue is set, freeInput should always be false
-      if (self.objectItems)
-        self.options.freeInput = false;
 
       makeOptionItemFunction(self.options, 'itemValue');
       makeOptionItemFunction(self.options, 'itemText');
@@ -384,7 +389,17 @@
               // HACK: only process on focusout when no typeahead opened, to
               //       avoid adding the typeahead text as tag
               if ($('.typeahead, .twitter-typeahead', self.$container).length === 0) {
-                self.add(self.$input.val());
+                var item2 = self.$input.val();
+                if (self.objectItems) {
+                  var beforeFreeInputItemAdd = $.Event('beforeFreeInputItemAdd', { item: item2, cancel: true });
+                  self.$element.trigger(beforeFreeInputItemAdd);
+                  if (beforeFreeInputItemAdd.cancel)
+                    return;
+
+                  item2 = beforeFreeInputItemAdd.item;
+                }
+
+                self.add(item2);
                 self.$input.val('');
               }
           }, self));
@@ -458,6 +473,14 @@
             size = textLength + wordSpace + 1;
         $input.attr('size', Math.max(this.inputSize, $input.val().length));
       }, self));
+      
+      self.$container.on('keyup', 'input', $.proxy(function(event) {
+        if(event.keyCode !== 13 && event.keyCode !== 38 && event.keyCode !== 40){
+          var $input = $(event.target);
+          var digBegin = $.Event('inputHasChanged', { val: $input.val() });
+          self.$element.trigger(digBegin);
+        }
+      }, self));
 
       self.$container.on('keypress', 'input', $.proxy(function(event) {
          var $input = $(event.target);
@@ -470,16 +493,19 @@
          var text = $input.val(),
          maxLengthReached = self.options.maxChars && text.length >= self.options.maxChars;
          if (self.options.freeInput && (keyCombinationInList(event, self.options.confirmKeys) || maxLengthReached)) {
-            // Only attempt to add a tag if there is data in the field
-            if (text.length !== 0) {
-               self.add(maxLengthReached ? text.substr(0, self.options.maxChars) : text);
-               $input.val('');
-            }
+            var item2 = maxLengthReached ? text.substr(0, self.options.maxChars) : text;
+            var isNumberValue = /^-?[0-9]+(\.[0-9]*)?$/.test($input.val());
+            if (self.objectItems && isNumberValue) {
+              var beforeFreeInputItemAdd = $.Event('beforeFreeInputItemAdd', { item: item2, cancel: true });
+              self.$element.trigger(beforeFreeInputItemAdd);
+              if (beforeFreeInputItemAdd.cancel)
+                return;
 
-            // If the field is empty, let the event triggered fire as usual
-            if (self.options.cancelConfirmKeysOnEmpty === false) {
-                event.preventDefault();
+              item2 = maxLengthReached ? beforeFreeInputItemAdd.item.substr(0, self.options.maxChars) : beforeFreeInputItemAdd.item;
+              self.add(item2);
             }
+            $input.val('');
+            event.preventDefault();
          }
 
          // Reset internal input's size
