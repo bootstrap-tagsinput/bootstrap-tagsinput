@@ -6,11 +6,13 @@ files = [
   JASMINE,
   JASMINE_ADAPTER,
   'lib/jquery.min.js',
-  'lib/bootstrap.min.js',
+  'lib/angular.min.js',
+  'lib/angular-mocks.js',
   'src/bootstrap-tagsinput.js',
+  'src/bootstrap-tagsinput-angular.js',
 
   'test/helpers.js',
-  { pattern: 'test/*.tests.*.js' }
+  { pattern: 'test/**/*.tests.js' }
 ];
 
 // list of files to exclude
@@ -18,7 +20,7 @@ exclude = [
 ];
 
 preprocessors = {
-  'src/bootstrap-tagsinput.js': 'coverage'
+  'src/*.js': 'coverage'
 };
 
 // test results reporter to use
