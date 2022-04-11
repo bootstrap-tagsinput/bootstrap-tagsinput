@@ -5,10 +5,10 @@
     <meta name="robots" content="index, follow" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     
-    <link rel="stylesheet" href="assets/bootstrap-2.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/bootstrap-2.3.2/css/docs.css">
-    <link rel="stylesheet" href="assets/google-code-prettify/prettify.css">
-    <link rel="stylesheet" href="assets/bootstrap-tagsinput.css">
+    
+    <link rel="stylesheet" href="bootstrap-2.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap-2.3.2/css/docs.css">
+    <link rel="stylesheet" href="../dist/bootstrap-tagsinput.css">
     <link rel="stylesheet" href="assets/app.css">
     <style>
     .accordion { margin-top:-19px; }
@@ -470,9 +470,9 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
               <td>
                 <p>Adds a tag</p>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('add', 'some tag');</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('add', 'some tag');</pre>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('add', { id: 1, text: 'some tag' });</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('add', { id: 1, text: 'some tag' });</pre>
               </td>
             </tr>
             <tr>
@@ -480,9 +480,9 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
               <td>
                 <p>Removes a tag</p>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('remove', 'some tag');</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('remove', 'some tag');</pre>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('remove', { id: 1, text: 'some tag' });</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('remove', { id: 1, text: 'some tag' });</pre>
               </td>
             </tr>
             <tr>
@@ -490,7 +490,7 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
               <td>
                 <p>Removes all tags</p>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('removeAll');</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('removeAll');</pre>
               </td>
             </tr>
             <tr>
@@ -498,7 +498,7 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
               <td>
                 <p>Sets focus in the tagsinput</p>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('focus');</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('focus');</pre>
               </td>
             </tr>
             <tr>
@@ -515,8 +515,7 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
               <td>
                 <p>Refreshes the tags input UI. This might be usefull when you're adding objects as tags. When an object's text changes, you'll have to refresh to update the matching tag's text.</p>
 
-
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('refresh');</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('refresh');</pre>
               </td>
             </tr>
             <tr>
@@ -524,7 +523,7 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
               <td>
                 <p>Removes tagsinput behaviour</p>
 
-                <pre class="prettyprint linenums">var $elt = $('input').tagsinput('destroy');</pre>
+                <pre class="prettyprint linenums">$('input').tagsinput('destroy');</pre>
               </td>
             </tr>
           </tbody>
@@ -535,12 +534,12 @@ angular.module('AngularExample', ['bootstrap-tagsinput'])
       <p>Code licensed under <a href="https://raw.github.com/TimSchlechter/bootstrap-tagsinput/master/LICENSE" target="_blank">MIT License</a></p>
     </footer>
 
-    <script src="assets/jquery.min.js"></script>
-    <script src="assets/bootstrap-2.3.2/js/bootstrap.min.js"></script>
-    <script src="assets/angular.min.js"></script>
-    <script src="assets/google-code-prettify/prettify.js"></script>
-    <script src="assets/bootstrap-tagsinput.js"></script>
-    <script src="assets/bootstrap-tagsinput-angular.js"></script>
+    <script src="bower_components/jquery/jquery.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/google-code-prettify-lite/prettify.js"></script>
+    <script src="bootstrap-2.3.2/js/bootstrap.min.js"></script>
+    <script src="../dist/bootstrap-tagsinput.js"></script>
+    <script src="../dist/bootstrap-tagsinput-angular.js"></script>
     <script src="assets/app_bs2.js"></script>
     <script src="assets/app.js"></script>
   </body>
