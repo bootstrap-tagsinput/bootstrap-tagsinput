@@ -11,22 +11,17 @@
     itemText: function(item) {
       return this.itemValue(item);
     },
-    typeahead: {
-      source: null,
-      matcher: function(item) {
-        return true;
-      }
-    }
+    freeInput : true
   };
 
   function TagsInput(element, options) {
     this.itemsArray = [];
-    this.itemsMap = {};
 
     this.$element = $(element);
     this.$element.hide();
 
-    this.multiple = (element.tagName === 'SELECT' && element.getAttribute('multiple'));
+    this.isSelect = (element.tagName === 'SELECT');
+    this.multiple = (this.isSelect && element.getAttribute('multiple'));
 
     this.$container = $('<div class="bootstrap-tagsinput"></div>');
     this.$input = $('<input size="1" type="text" />').appendTo(this.$container);
@@ -72,19 +67,23 @@
           itemText = self.options.itemText(item),
           tagClass = self.options.tagClass(item);
 
-      if (self.itemsMap[itemValue.toString()] !== undefined)
+      if ($.grep(self.itemsArray, function(item) { return self.options.itemValue(item) === itemValue; } )[0])
         return;
 
       // register item in internal array and map
       self.itemsArray.push(item);
-      self.itemsMap[itemValue] = item;
 
       // add a tag element
-      self.$input.before($('<span class="tag ' + htmlEncode(tagClass) + '" data-value="' + htmlEncode(itemValue) + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>'));
+      var $tag = $('<span class="tag ' + htmlEncode(tagClass) + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>');
+      $tag.data('item', item);
+      self.$input.before($tag);
 
       // add <option /> if item represents a value not present in one of the <select />'s options
-      if (self.$element[0].tagName === 'SELECT' && !$('option[value="' + escape(itemValue) + '"]')[0]) {
-        self.$element.append($('<option value="' + htmlEncode(itemValue) + '" selected>' + htmlEncode(itemText) + '</option>'));
+      if (self.isSelect && !$('option[value="' + escape(itemValue) + '"]')[0]) {
+        var $option = $('<option selected>' + htmlEncode(itemText) + '</option>');
+        $option.data('item', item);
+        $option.attr('value', itemValue);
+        self.$element.append($option);
       }
 
      if (!dontPushVal)
@@ -92,22 +91,51 @@
     },
 
     remove: function(item, dontPushVal) {
-      var self = this,
-          itemValue = self.options.itemValue(item);
+      var self = this;
 
-      $('.tag[data-value="' + itemValue + '"]', self.$container).remove();
-      $('option[value="' + itemValue + '"]', self.$element).remove();
+      $('.tag', self.$container).filter(function() { return $(this).data('item') === item; }).remove();
+      $('option', self.$element).filter(function() { return $(this).data('item') === item; }).remove();
 
        // unregister item in internal array and map
       self.itemsArray.splice(self.itemsArray.indexOf(item), 1);
-      delete self.itemsMap[itemValue];
 
       if (!dontPushVal)
         self.pushVal();
     },
 
+    removeAll: function() {
+      var self = this;
+
+      $('.tag', self.$container).remove();
+      $('option', self.$element).remove();
+
+      while(self.itemsArray.length > 0)
+        self.itemsArray.pop();
+
+      self.pushVal();
+    },
+
     refresh: function() {
-      //    $tag = $('.tag', self.$container),
+      var self = this;
+      $('.tag', self.$container).each(function() {
+        var $tag = $(this),
+            item = $tag.data('item'),
+            itemValue = self.options.itemValue(item),
+            itemText = self.options.itemText(item),
+            tagClass = self.options.tagClass(item);
+
+          // Update tag's class and inner text
+          $tag.attr('class', null);
+          $tag.addClass('tag ' + htmlEncode(tagClass));
+          $tag.contents().filter(function() {
+            return this.nodeType == 3;
+          })[0].nodeValue = htmlEncode(itemText);
+
+          if (self.isSelect) {
+            var option = $('option', self.$element).filter(function() { return $(this).data('item') === item; });
+            option.attr('value', itemValue);
+          }
+      });
     },
 
     // Returns the items added as tags
@@ -127,13 +155,22 @@
       var self = this;
 
       self.options = $.extend({}, defaultOptions, options);
+      var typeahead = self.options.typeahead || {};
+
+      // When itemValue is set, freeInput should always be false
+      if (self.options.itemValue !== defaultOptions.itemValue)
+        self.options.freeInput = false;
 
       makeOptionItemFunction(self.options, 'itemValue');
       makeOptionItemFunction(self.options, 'itemText');
       makeOptionItemFunction(self.options, 'tagClass');
 
-      if (self.options.source && $.fn.typeahead) {
-        makeOptionFunction(self.options, 'source');
+      // for backwards compatibility, self.options.source is deprecated
+      if (self.options.source)
+        typeahead.source = self.options.source;
+
+      if (typeahead.source && $.fn.typeahead) {
+        makeOptionFunction(typeahead, 'source');
 
         self.$input.typeahead({
           source: function (query, process) {
@@ -150,7 +187,7 @@
 
             this.map = {};
             var map = this.map,
-                data = self.options.source(query);
+                data = typeahead.source(query);
 
             if ($.isFunction(data.success)) {
               // support for Angular promises
@@ -187,9 +224,20 @@
           // BACKSPACE
           case 8:
             if (doGetCaretPosition($input[0]) === 0) {
-              var items = self.items();
-              if (items[0])
-                self.remove(items[items.length-1]);
+              var prev = $input.prev();
+              if (prev) {
+                self.remove(prev.data('item'));
+              }
+            }
+            break;
+
+          // DELETE
+          case 46:
+            if (doGetCaretPosition($input[0]) === 0) {
+              var next = $input.next();
+              if (next) {
+                self.remove(next.data('item'));
+              }
             }
             break;
 
@@ -213,7 +261,7 @@
             break;
           // ENTER
           case 13:
-            if (!self.options.source) {
+            if (self.options.freeInput) {
               self.add($input.val());
               $input.val('');
             }
@@ -226,8 +274,7 @@
 
       // Remove icon clicked
       self.$container.on('click', '[data-role=remove]', $.proxy(function(event) {
-        var value = $(event.target).closest('.tag').attr('data-value');
-        self.remove(self.itemsMap[value]);
+        self.remove($(event.target).closest('.tag').data('item'));
       }, self));
 
       if (self.$element[0].tagName === 'INPUT') {
@@ -244,7 +291,7 @@
 
       // Unbind events
       self.$container.off('keypress', 'input');
-      self.$container.off('click', '[data-role=remove]');
+      self.$container.off('click', '[50role=remove]');
 
       self.$container.remove();
       self.$element.removeData('tagsinput');
