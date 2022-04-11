@@ -16,7 +16,8 @@
     confirmKeys: [13],
     onTagExists: function(item, $tag) {
       $tag.hide().fadeIn();
-    }
+    },
+    trimValue: false
   };
 
   /**
@@ -35,10 +36,11 @@
     this.inputSize = Math.max(1, this.placeholderText.length);
 
     this.$container = $('<div class="bootstrap-tagsinput"></div>');
-    this.$input = $('<input size="' + this.inputSize + '" type="text" placeholder="' + this.placeholderText + '"/>').appendTo(this.$container);
+    this.$input = $('<input type="text" placeholder="' + this.placeholderText + '"/>').appendTo(this.$container);
 
     this.$element.after(this.$container);
 
+    this.$input.get(0).style.setProperty('width', this.inputSize < 3 ? 3 : this.inputSize + 'em', 'important'); // to override bootstrap width !important
     this.build(options);
   }
 
@@ -58,6 +60,11 @@
       // Ignore falsey values, except false
       if (item !== false && !item)
         return;
+
+      // Trim value
+      if (typeof item === "string" && self.options.trimValue) {
+        item = $.trim(item);
+      }
 
       // Throw an error when trying to add an object while the itemValue option was not set
       if (typeof item === "object" && !self.objectItems)
@@ -99,6 +106,10 @@
         return;
       }
 
+      // if length greater than limit
+      if (self.items().toString().length + item.length + 1 > self.options.maxInputLength)
+        return;
+
       // register item in internal array and map
       self.itemsArray.push(item);
 
@@ -109,7 +120,7 @@
       $tag.after(' ');
 
       // add <option /> if item represents a value not present in one of the <select />'s options
-      if (self.isSelect && !$('option[value="' + escape(itemValue) + '"]',self.$element)[0]) {
+      if (self.isSelect && !$('option[value="' + encodeURIComponent(itemValue) + '"]',self.$element)[0]) {
         var $option = $('<option selected>' + htmlEncode(itemText) + '</option>');
         $option.data('item', item);
         $option.attr('value', itemValue);
@@ -120,7 +131,7 @@
         self.pushVal();
 
       // Add class when reached maxTags
-      if (self.options.maxTags === self.itemsArray.length)
+      if (self.options.maxTags === self.itemsArray.length || self.items().toString().length === self.options.maxInputLength)
         self.$container.addClass('bootstrap-tagsinput-max');
 
       self.$element.trigger($.Event('itemAdded', { item: item }));
@@ -169,9 +180,6 @@
         self.itemsArray.pop();
 
       self.pushVal();
-
-      if (self.options.maxTags && !this.isEnabled())
-        this.enable();
     },
 
     /**
@@ -210,7 +218,7 @@
 
     /**
      * Assembly value by retrieving the value of each item, and set it on the
-     * element. 
+     * element.
      */
     pushVal: function() {
       var self = this,
@@ -288,12 +296,25 @@
       }
 
       self.$container.on('click', $.proxy(function(event) {
+        if (! self.$element.attr('disabled')) {
+          self.$input.removeAttr('disabled');
+        }
         self.$input.focus();
       }, self));
+
+        self.$input.on('focusout', $.proxy(function(event) {
+            self.add(self.$input.val());
+            self.$input.val('');
+        }, self));
 
       self.$container.on('keydown', 'input', $.proxy(function(event) {
         var $input = $(event.target),
             $inputWrapper = self.findInputWrapper();
+
+        if (self.$element.attr('disabled')) {
+          self.$input.attr('disabled', 'disabled');
+          return;
+        }
 
         switch (event.which) {
           // BACKSPACE
@@ -345,11 +366,14 @@
         }
 
         // Reset internal input's size
-        $input.attr('size', Math.max(this.inputSize, $input.val().length));
+        $input.get(0).style.setProperty('width', Math.max(this.inputSize < 3 ? 3 : this.inputSize, $input.val().length) + 'em', 'important');
       }, self));
 
       // Remove icon clicked
       self.$container.on('click', '[data-role=remove]', $.proxy(function(event) {
+        if (self.$element.attr('disabled')) {
+          return;
+        }
         self.remove($(event.target).closest('.tag').data('item'));
       }, self));
 
@@ -381,7 +405,7 @@
     },
 
     /**
-     * Sets focus on the tagsinput 
+     * Sets focus on the tagsinput
      */
     focus: function() {
       this.$input.focus();
@@ -416,24 +440,27 @@
 
     this.each(function() {
       var tagsinput = $(this).data('tagsinput');
-
       // Initialize a new tags input
       if (!tagsinput) {
-        tagsinput = new TagsInput(this, arg1);
-        $(this).data('tagsinput', tagsinput);
-        results.push(tagsinput);
+          tagsinput = new TagsInput(this, arg1);
+          $(this).data('tagsinput', tagsinput);
+          results.push(tagsinput);
 
-        if (this.tagName === 'SELECT') {
-          $('option', $(this)).attr('selected', 'selected');
-        }
+          if (this.tagName === 'SELECT') {
+              $('option', $(this)).attr('selected', 'selected');
+          }
 
-        // Init tags from $(this).val()
-        $(this).val($(this).val());
-      } else {
-        // Invoke function on existing tags input
-        var retVal = tagsinput[arg1](arg2);
-        if (retVal !== undefined)
-          results.push(retVal);
+          // Init tags from $(this).val()
+          $(this).val($(this).val());
+      } else if (!arg1 && !arg2) {
+          // tagsinput already exists
+          // no function, trying to init
+          results.push(tagsinput);
+      } else if(tagsinput[arg1] !== undefined) {
+          // Invoke function on existing tags input
+          var retVal = tagsinput[arg1](arg2);
+          if (retVal !== undefined)
+              results.push(retVal);
       }
     });
 
@@ -446,9 +473,9 @@
   };
 
   $.fn.tagsinput.Constructor = TagsInput;
-  
+
   /**
-   * Most options support both a string or number as well as a function as 
+   * Most options support both a string or number as well as a function as
    * option value. This function makes sure that the option with the given
    * key in the given options is wrapped in a function
    */
