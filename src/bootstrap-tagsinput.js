@@ -22,6 +22,7 @@
     confirmKeys: [13, 44],
     delimiter: ',',
     delimiterRegex: null,
+    pasteDelimeterForNewLine: ",",
     cancelConfirmKeysOnEmpty: false,
     onTagExists: function(item, $tag) {
       $tag.hide().fadeIn();
@@ -399,6 +400,14 @@
           self.$container.removeClass(self.options.focusClass);
         },
       });
+
+      /**
+       * Replace New Line Character with Delimeter Before further execution
+       */
+      self.$input.on("paste", $.proxy(function(event) {
+        event.preventDefault();
+        self.$input.val((event.originalEvent || event).clipboardData.getData('text/plain').replaceAll("\n", self.options.pasteDelimeterForNewLine));
+      },self));
 
       self.$container.on('keydown', 'input', $.proxy(function(event) {
         var $input = $(event.target),
