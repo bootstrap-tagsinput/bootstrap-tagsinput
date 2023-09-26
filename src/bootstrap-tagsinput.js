@@ -151,7 +151,7 @@
       if (self.isSelect && !optionExists) {
         var $option = $('<option selected>' + htmlEncode(itemText) + '</option>');
         $option.data('item', item);
-        $option.attr('value', itemValue);
+        $option.val(itemValue);
         self.$element.append($option);
       }
 
@@ -249,7 +249,7 @@
 
           if (self.isSelect) {
             var option = $('option', self.$element).filter(function() { return $(this).data('item') === item; });
-            option.attr('value', itemValue);
+            option.val(itemValue);
           }
       });
     },
@@ -374,8 +374,8 @@
       }
 
       self.$container.on('click', $.proxy(function(event) {
-        if (! self.$element.attr('disabled')) {
-          self.$input.removeAttr('disabled');
+        if (! self.$element.prop('disabled')) {
+          self.$input.prop('disabled', false);
         }
         self.$input.focus();
       }, self));
@@ -413,8 +413,8 @@
         var $input = $(event.target),
             $inputWrapper = self.findInputWrapper();
 
-        if (self.$element.attr('disabled')) {
-          self.$input.attr('disabled', 'disabled');
+        if (self.$element.prop('disabled')) {
+          self.$input.prop('disabled', true);
           return;
         }
 
@@ -471,8 +471,8 @@
       self.$container.on('keypress', 'input', $.proxy(function(event) {
          var $input = $(event.target);
 
-         if (self.$element.attr('disabled')) {
-            self.$input.attr('disabled', 'disabled');
+         if (self.$element.prop('disabled')) {
+            self.$input.prop('disabled', true);
             return;
          }
 
@@ -500,7 +500,7 @@
 
       // Remove icon clicked
       self.$container.on('click', '[data-role=remove]', $.proxy(function(event) {
-        if (self.$element.attr('disabled')) {
+        if (self.$element.prop('disabled')) {
           return;
         }
         self.remove($(event.target).closest('.tag').data('item'));
@@ -512,7 +512,7 @@
             self.add(self.$element.val());
         } else {
           $('option', self.$element).each(function() {
-            self.add($(this).attr('value'), true);
+            self.add($(this).val(), true);
           });
         }
       }
@@ -576,7 +576,7 @@
           results.push(tagsinput);
 
           if (this.tagName === 'SELECT') {
-              $('option', $(this)).attr('selected', 'selected');
+              $('option', $(this)).prop('selected', true);
           }
 
           // Init tags from $(this).val()
