@@ -406,7 +406,9 @@
        */
       self.$input.on("paste", $.proxy(function(event) {
         event.preventDefault();
-        self.$input.val((event.originalEvent || event).clipboardData.getData('text/plain').replaceAll("\n", self.options.pasteDelimeterForNewLine));
+        var clipboadContent = (event.originalEvent || event).clipboardData.getData('text/plain');
+        self.$input.val(clipboadContent.replaceAll("\n", self.options.pasteDelimeterForNewLine));
+        self.$input.attr('size', clipboadContent.length);
       },self));
 
       self.$container.on('keydown', 'input', $.proxy(function(event) {
