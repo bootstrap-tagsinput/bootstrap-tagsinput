@@ -1,5 +1,5 @@
 /*
- * bootstrap-tagsinput v0.8.0
+ * bootstrap-tagsinput v0.8.1
  * 
  */
 
@@ -27,6 +27,7 @@
     confirmKeys: [13, 44],
     delimiter: ',',
     delimiterRegex: null,
+    pasteDelimeterForNewLine: ",",
     cancelConfirmKeysOnEmpty: false,
     onTagExists: function(item, $tag) {
       $tag.hide().fadeIn();
@@ -140,7 +141,7 @@
 
       // add a tag element
 
-      var $tag = $('<span class="tag ' + htmlEncode(tagClass) + (itemTitle !== null ? ('" title="' + itemTitle) : '') + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>');
+      var $tag = $('<span class="tag ' + htmlEncode(tagClass) + (itemTitle !== null ? ('" title="' + htmlEncode(itemTitle)) : '') + '">' + htmlEncode(itemText) + '<span data-role="remove"></span></span>');
       $tag.data('item', item);
       self.findInputWrapper().before($tag);
       $tag.after(' ');
@@ -350,20 +351,31 @@
 
       // typeahead.js
       if (self.options.typeaheadjs) {
+        // Determine if main configurations were passed or simply a dataset
+        var typeaheadjs = self.options.typeaheadjs;
+        if (!$.isArray(typeaheadjs)) {
+            typeaheadjs = [null, typeaheadjs];
+        }
 
-          // Determine if main configurations were passed or simply a dataset
-          var typeaheadjs = self.options.typeaheadjs;
-          if (!$.isArray(typeaheadjs)) {
-              typeaheadjs = [null, typeaheadjs];
+        $.fn.typeahead.apply(self.$input, typeaheadjs).on('typeahead:selected', $.proxy(function (obj, datum, name) {
+          var index = 0;
+          typeaheadjs.some(function(dataset, _index) {
+            if (dataset.name === name) {
+              index = _index;
+              return true;
+            }
+            return false;
+          });
+
+          // @TODO Dep: https://github.com/corejavascript/typeahead.js/issues/89
+          if (typeaheadjs[index].valueKey) {
+            self.add(datum[typeaheadjs[index].valueKey]);
+          } else {
+            self.add(datum);
           }
-          var valueKey = typeaheadjs[1].valueKey; // We should test typeaheadjs.size >= 1
-          var f_datum = valueKey ? function (datum) { return datum[valueKey];  }
-                                 : function (datum) {  return datum;  }
-          $.fn.typeahead.apply(self.$input,typeaheadjs).on('typeahead:selected', $.proxy(function (obj, datum) {
-              self.add( f_datum(datum) );
-              self.$input.typeahead('val', '');
-            }, self));
 
+          self.$input.typeahead('val', '');
+        }, self));
       }
 
       self.$container.on('click', $.proxy(function(event) {
@@ -393,6 +405,14 @@
           self.$container.removeClass(self.options.focusClass);
         },
       });
+
+      /**
+       * Replace New Line Character with Delimeter Before further execution
+       */
+      self.$input.on("paste", $.proxy(function(event) {
+        event.preventDefault();
+        self.$input.val((event.originalEvent || event).clipboardData.getData('text/plain').replaceAll("\n", self.options.pasteDelimeterForNewLine));
+      },self));
 
       self.$container.on('keydown', 'input', $.proxy(function(event) {
         var $input = $(event.target),
